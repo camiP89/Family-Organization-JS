@@ -1,0 +1,53 @@
+@import url('./variables.css');
+
+#loginForm {
+  margin: 30px 20px 0 20px;
+  width: calc(100% - 50px);
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  background-color: var(--light-background);
+  border: solid 5px var(--rust-light);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+label {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+input {
+  padding: 10px;
+  font-size: 1rem;
+  border: solid 5px var(--rust-light);
+}
+
+@media (min-width: 550px) {
+  .container {
+    margin: 30px 50px 0px 50px;
+    padding: 40px 0;
+    width: calc(100% - 100px);
+    border: solid 10px var(--rust-light);
+  }
+}
+
+@media (min-width: 850px) {
+  .container {
+    margin: 30px 100px 0px 100px;
+    padding: 35px 0;
+    width: calc(100% - 200px);
+  }
+}
+
+@media (min-width: 950px) {
+  .container {
+    margin: 30px 250px 0px 250px;
+    padding: 40px 0;
+    width: calc(100% - 500px);
+  }
+}

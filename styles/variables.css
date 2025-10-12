@@ -1,0 +1,16 @@
+:root {
+  --background-all: #ebdbc6;
+  --beige: #ebdbc6;
+  --dusty-pink: #bf8275;
+  --dusty-pink-h1: rgba(126, 43, 36, 0.75);
+  --light-pink: #f2c1b6;
+  --light-light-pink: rgba(242, 193, 182, 0.5);
+  --rust: #bf6f41;
+  --rust-light: rgba(191, 111, 65, 0.5);
+  --off-white: #f2f2eb;
+  --light-background: rgba(217, 200, 169, 0.5);
+  --header-footer: rgba(242, 193, 182, 0.5);
+  --white: #fff;
+  --black: #000;
+  --raspberry: #7b2e24;
+}
