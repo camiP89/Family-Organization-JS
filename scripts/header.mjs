@@ -4,20 +4,18 @@ export function createHeader() {
   const logoutButton = document.getElementById("logout-button");
   const userName = localStorage.getItem("userName");
 
-  // Detect environment
-  let prefix = "."; // default for local files
-  const repoName = "Family-Organization-JS"; // GitHub repo name
+  // Repo name for GitHub Pages
+  const repoName = "Family-Organization-JS";
 
-  if (
-    !window.location.hostname.includes("localhost") &&
-    !window.location.hostname.includes("127.0.0.1")
-  ) {
-    // GitHub Pages
+  // Determine prefix for paths
+  let prefix = ".";
+  if (window.location.hostname.includes("github.io")) {
+    // GitHub Pages project pages
     prefix = `/${repoName}`;
   } else {
-    // Local development
+    // Local dev
     const pathParts = window.location.pathname.split("/");
-    if (pathParts.includes("pages")) prefix = ".."; // if inside pages folder
+    if (pathParts.includes("pages")) prefix = "..";
   }
 
   console.log("📂 Current path:", window.location.pathname);
@@ -47,7 +45,8 @@ export function createHeader() {
     if (logoutButton) {
       logoutButton.style.display = "inline-block";
       logoutButton.addEventListener("click", () => {
-        localStorage.clear();
+        // Only remove the user key instead of clearing everything
+        localStorage.removeItem("userName");
         alert("You have logged out! Redirecting to login...");
         location.href = `${prefix}/pages/login.html`;
       });
