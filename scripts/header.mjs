@@ -7,12 +7,12 @@ export function createHeader() {
 
   if (navContainer) {
     navContainer.innerHTML = `
-      <a href="../index.html">Home</a>
-      <a href="./shopping.html">Shopping List</a>
-      <a href="./calendar.html">Calendar</a>
-      <a href="./chores.html">Chores</a>
-      <a href="./profile.html">Profile</a>
-      <a href="./login.html" id="login-link">Login</a>
+      <a href="/index.html">Home</a>
+      <a href="/shopping.html">Shopping List</a>
+      <a href="/calendar.html">Calendar</a>
+      <a href="/chores.html">Chores</a>
+      <a href="/profile.html">Profile</a>
+      <a href="/login.html" id="login-link">Login</a>
     `;
 
     navContainer.classList.add(userName ? "nav-logged-in" : "nav-logged-out");
