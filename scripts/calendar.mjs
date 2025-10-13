@@ -56,10 +56,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const cell = document.createElement("div");
       cell.classList.add("day-cell");
 
+      // Get weekday name once
+      const dateObj = new Date(year, month, day);
+      const weekdayName = dateObj.toLocaleString("default", {
+        weekday: "short", // "short" → Mon, "long" → Monday, "narrow" → M
+      });
+
+      // Day number + weekday label
       const dayLabel = document.createElement("div");
       dayLabel.classList.add("day-number");
-      dayLabel.textContent = day;
+      dayLabel.innerHTML = `<span class="day-num">${day}</span> <span class="weekday">${weekdayName}</span>`;
 
+      // Note field
       const note = document.createElement("textarea");
       note.classList.add("day-note");
       note.placeholder = "Write here...";
@@ -81,8 +89,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Highlight weekends
-      const dayOfWeek = new Date(year, month, day).getDay();
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
+      const dayOfWeekIndex = dateObj.getDay(); // 0=Sun, 6=Sat
+      if (dayOfWeekIndex === 0 || dayOfWeekIndex === 6) {
         cell.classList.add("weekend");
       }
 

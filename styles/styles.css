@@ -21,7 +21,7 @@ h1 {
 }
 
 .mobile-header i {
-  font-size: 2.8rem;
+  font-size: 2.2rem;
   color: var(--raspberry);
 }
 
@@ -39,7 +39,7 @@ nav {
   background: var(--off-white);
   width: 100%;
   left: 0px;
-  top: 85px;
+  top: 70px;
   z-index: 10;
 }
 
@@ -65,7 +65,7 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding: 10px 20px;
   flex-wrap: wrap;
   background-color: var(--header-footer);
   border-bottom: solid 2px var(--raspberry);
@@ -95,7 +95,7 @@ header {
   font-weight: 500;
   font-size: 0.9rem;
   text-decoration: none;
-  border-radius: 20px;
+  border-radius: 5px;
   cursor: pointer;
   margin: 0;
 }

@@ -58,8 +58,48 @@
         />
       </a>
     </div>
-    <main>
+      <main>
       <h1>Family Pugh Chores</h1>
+
+      <form id="chore-form">
+        <select id="person-select" required>
+          <option value="">Select person</option>
+          <option value="Daddy">Daddy</option>
+          <option value="Mummy">Mummy</option>
+          <option value="Lily">Lily</option>
+          <option value="Scarlet">Scarlet</option>
+          <option value="Ollie">Ollie</option>
+        </select>
+        <input type="text" id="chore-input" placeholder="New chore..." required />
+        <button type="submit" class="button">Add Chore</button>
+      </form>
+
+      <section id="chores-section">
+        <div id="Daddy" class="chore-card">
+          <h2>Daddy</h2>
+          <ul class="chore-list"></ul>
+        </div>
+        <div id="Mummy" class="chore-card">
+          <h2>Mummy</h2>
+          <ul class="chore-list"></ul>
+        </div>
+        <div id="Lily" class="chore-card">
+          <h2>Lily</h2>
+          <ul class="chore-list"></ul>
+        </div>
+        <div id="Scarlet" class="chore-card">
+          <h2>Scarlet</h2>
+          <ul class="chore-list"></ul>
+        </div>
+        <div id="Ollie" class="chore-card">
+          <h2>Ollie</h2>
+          <ul class="chore-list"></ul>
+        </div>
+      </section>
+
+      <section id="completed-container">
+        <h2>Completed Chores</h2>
+      </section>
     </main>
     <footer>
       <div class="logo-container-footer">

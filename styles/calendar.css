@@ -11,9 +11,10 @@
 }
 
 .nav-btn {
-  background: var(--rust);
+  background: var(--dusty-pink);
   color: white;
   border: none;
+  border: solid 2px var(--raspberry);
   border-radius: 6px;
   padding: 6px 12px;
   cursor: pointer;
@@ -34,7 +35,8 @@
 }
 
 .day-cell {
-  background: var(--rust-light);
+  background: var(--beige);
+  border: solid 2px var(--dusty-pink);
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   padding: 10px;
@@ -47,6 +49,17 @@
   font-weight: bold;
   margin-bottom: 5px;
   color: var(--black);
+}
+
+.day-num {
+  font-weight: 700;
+  margin-right: 6px; /* adjust spacing */
+  color: var(--black);
+}
+
+.weekday {
+  color: var(--raspberry);
+  font-size: 0.9rem;
 }
 
 .day-note {
@@ -66,8 +79,8 @@
 
 /* --- Highlight weekends --- */
 .weekend {
-  background-color: var(--light-background);
-  border: 2px dashed var(--rust);
+  background-color: var(--light-light-pink);
+  border: 2px dashed var(--raspberry);
   opacity: 0.95;
 }
 
