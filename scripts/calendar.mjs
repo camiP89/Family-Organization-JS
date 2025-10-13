@@ -4,22 +4,33 @@ createHeader();
 
 document.addEventListener("DOMContentLoaded", () => {
   const calendar = document.getElementById("calendar");
+  const userName = localStorage.getItem("userName");
+
+  // If not logged in → hide calendar and redirect
+  if (!userName) {
+    calendar.innerHTML = `
+      <p class="login-warning">
+        You must be logged in to view the calendar.<br>
+        <a href="./login.html" class="button">Go to Login</a>
+      </p>
+    `;
+    return; // Stop rendering the calendar
+  }
 
   const savedNotes = JSON.parse(localStorage.getItem("calendarNotes")) || {};
 
-  // Current date tracking
   let currentDate = new Date();
   renderCalendar(currentDate);
 
   function renderCalendar(date) {
-    calendar.innerHTML = ""; // Clear existing content
+    calendar.innerHTML = ""; // Clear previous month
 
     const year = date.getFullYear();
     const month = date.getMonth();
     const monthName = date.toLocaleString("default", { month: "long" });
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    // Title + Navigation
+    // Header (month title + arrows)
     const header = document.createElement("div");
     header.classList.add("calendar-header");
 
@@ -42,12 +53,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const title = document.createElement("h2");
     title.textContent = `${monthName} ${year}`;
 
-    header.appendChild(prevBtn);
-    header.appendChild(title);
-    header.appendChild(nextBtn);
+    header.append(prevBtn, title, nextBtn);
     calendar.appendChild(header);
 
-    // Grid
+    // Calendar grid
     const grid = document.createElement("div");
     grid.classList.add("calendar-grid");
 
@@ -85,8 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.classList.add("weekend");
       }
 
-      cell.appendChild(dayLabel);
-      cell.appendChild(note);
+      cell.append(dayLabel, note);
       grid.appendChild(cell);
     }
 
