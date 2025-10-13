@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
   loginForm.id = "loginForm";
   loginForm.classList.add("form");
 
-
   // Username
   const usernameInput = document.createElement("input");
   usernameInput.id = "username";
@@ -32,6 +31,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const submitButton = document.createElement("button");
   submitButton.type = "submit";
   submitButton.textContent = "Login";
+  // Option 1: class
+  submitButton.classList.add("button");
+
+  // Option 2: id
+  submitButton.id = "button";
 
   loginForm.append(usernameInput, passwordInput, submitButton);
   formContainer.appendChild(loginForm);
@@ -48,13 +52,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const username = usernameInput.value.trim();
     const password = passwordInput.value.trim();
-    const user = users.find(u => u.username === username && u.password === password);
+    const user = users.find(
+      (u) => u.username === username && u.password === password
+    );
 
     if (user) {
       localStorage.setItem("userName", user.username);
       messageElement.textContent = `Welcome, ${user.username}! Redirecting...`;
       messageElement.style.color = "green";
-      setTimeout(() => window.location.href = "../index.html", 1000);
+      setTimeout(() => (window.location.href = "../index.html"), 1000);
     } else {
       messageElement.textContent = "Invalid username or password.";
       messageElement.style.color = "red";
