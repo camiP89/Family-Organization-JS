@@ -1,25 +1,17 @@
 import { createHeader } from "./header.mjs";
-
-createHeader();
+import { protectPage } from "./authCheck.mjs";
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Redirect if not logged in
+  if (!protectPage("./login.html")) return;
+
+  // Safe to create header and render calendar
+  createHeader();
+
   const calendar = document.getElementById("calendar");
-  const userName = localStorage.getItem("userName");
-
-  // If not logged in → hide calendar and redirect
-  if (!userName) {
-    calendar.innerHTML = `
-      <p class="login-warning">
-        You must be logged in to view the calendar.<br>
-        <a href="./login.html" class="button">Go to Login</a>
-      </p>
-    `;
-    return; // Stop rendering the calendar
-  }
-
   const savedNotes = JSON.parse(localStorage.getItem("calendarNotes")) || {};
-
   let currentDate = new Date();
+
   renderCalendar(currentDate);
 
   function renderCalendar(date) {
@@ -78,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("calendarNotes", JSON.stringify(savedNotes));
       });
 
-      // Highlight today's date
+      // Highlight today
       const today = new Date();
       if (
         day === today.getDate() &&
@@ -101,3 +93,4 @@ document.addEventListener("DOMContentLoaded", () => {
     calendar.appendChild(grid);
   }
 });
+

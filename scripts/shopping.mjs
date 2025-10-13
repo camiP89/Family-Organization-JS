@@ -1,8 +1,14 @@
 import { createHeader } from './header.mjs';
-
-createHeader();
+import { protectPage } from './authCheck.mjs';
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Protect the page first
+  if (!protectPage("../login.html")) return;
+
+  // Create the header
+  createHeader();
+
+  // --- Page-specific code for shopping list ---
   const form = document.getElementById("shopping-form");
   const shoppingInput = document.getElementById("shopping-item");
   const shoppingListEl = document.querySelector(".shopping-list");
@@ -61,3 +67,4 @@ document.addEventListener("DOMContentLoaded", () => {
     shoppingInput.value = "";
   });
 });
+
