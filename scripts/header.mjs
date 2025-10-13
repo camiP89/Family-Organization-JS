@@ -2,27 +2,29 @@ export function createHeader() {
   const navContainer = document.getElementById("nav-container");
   const welcomeText = document.getElementById("welcome-text");
   const logoutButton = document.getElementById("logout-button");
-
   const userName = localStorage.getItem("userName");
 
-  // Debugging info
+  // Detect environment
+  let prefix = "."; // default for local files
+  const repoName = "Family-Organization-JS"; // GitHub repo name
+
+  if (
+    !window.location.hostname.includes("localhost") &&
+    !window.location.hostname.includes("127.0.0.1")
+  ) {
+    // GitHub Pages
+    prefix = `/${repoName}`;
+  } else {
+    // Local development
+    const pathParts = window.location.pathname.split("/");
+    if (pathParts.includes("pages")) prefix = ".."; // if inside pages folder
+  }
+
   console.log("📂 Current path:", window.location.pathname);
-
-  // 🔍 Detect whether the code is running locally or on GitHub Pages
-  const isLocal = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
-  const repoName = "Family-Organization-JS";
-
-  // ✅ If local, links are relative (./pages/)
-  // ✅ If on GitHub Pages, links include the repo folder (/Family-Organization-JS/pages/)
-  const prefix = isLocal ? "." : `/${repoName}`;
-
-  const isInPages = window.location.pathname.includes("/pages/");
-  console.log("🌐 Running locally:", isLocal);
-  console.log("📁 Is in /pages/ folder:", isInPages);
+  console.log("🌐 Hostname:", window.location.hostname);
   console.log("🔗 Using prefix:", prefix);
   console.log("👤 Logged in as:", userName ? userName : "No user");
 
-  // --- Create Navigation ---
   if (navContainer) {
     navContainer.innerHTML = `
       <a href="${prefix}/index.html">Home</a>
@@ -39,7 +41,6 @@ export function createHeader() {
     if (userName && loginLink) loginLink.style.display = "none";
   }
 
-  // --- User greeting & logout ---
   if (userName) {
     if (welcomeText) welcomeText.textContent = `Welcome, ${userName}!`;
 
