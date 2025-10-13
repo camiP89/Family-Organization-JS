@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
       messageElement.style.color = "green";
 
       setTimeout(() => {
-        window.location.href = "/index.html";
+        window.location.href = "../index.html";
       }, 1000);
     } else {
       messageElement.textContent = "Invalid username or password.";
