@@ -5,16 +5,15 @@ export function createHeader() {
   const userName = localStorage.getItem("userName");
 
   // Detect environment
-  const repoName = "Family-Organization-JS";
-  let prefix = ".";
+  const repoName = "Family-Organization-JS"; // your GitHub repo name
+  let prefix = "."; // default local dev
   if (window.location.hostname.includes("github.io")) {
     prefix = `/${repoName}`;
-  } else {
-    const pathParts = window.location.pathname.split("/");
-    if (pathParts.includes("pages")) prefix = "..";
+  } else if (window.location.pathname.includes("/pages/")) {
+    prefix = ".."; // inside pages folder
   }
 
-  // Build nav links
+  // Build nav
   if (navContainer) {
     navContainer.innerHTML = `
       <a href="${prefix}/index.html">Home</a>
@@ -24,14 +23,12 @@ export function createHeader() {
       <a href="${prefix}/pages/profile.html">Profile</a>
       <a href="${prefix}/pages/login.html" id="login-link">Login</a>
     `;
-
     navContainer.classList.add(userName ? "nav-logged-in" : "nav-logged-out");
 
     const loginLink = document.getElementById("login-link");
     if (userName && loginLink) loginLink.style.display = "none";
   }
 
-  // Welcome text and logout
   if (userName) {
     if (welcomeText) welcomeText.textContent = `Welcome, ${userName}!`;
 
@@ -39,11 +36,11 @@ export function createHeader() {
       logoutButton.style.display = "inline-block";
       logoutButton.addEventListener("click", () => {
         localStorage.clear();
-        window.location.href = `${prefix}/pages/login.html`;
+        alert("Logged out! Redirecting...");
+        location.href = `${prefix}/pages/login.html`;
       });
     }
   } else {
     if (logoutButton) logoutButton.style.display = "none";
   }
 }
-
