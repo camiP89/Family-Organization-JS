@@ -1,0 +1,16 @@
+{
+  "name": "Family-Organization-JS",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "firebase": "^12.4.0",
+    "firebase-admin": "^13.5.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.10"
+  }
+}

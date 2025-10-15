@@ -1,8 +1,14 @@
+// scripts/header.mjs
+
+// Import Firebase Authentication and the 'auth' instance
+import { auth } from "../src/firebase.js"; // Corrected path to your firebase.js
+import { signOut } from "firebase/auth"; // Import the signOut function
+
 export function createHeader() {
   const navContainer = document.getElementById("nav-container");
   const welcomeText = document.getElementById("welcome-text");
   const logoutButton = document.getElementById("logout-button");
-  const userName = localStorage.getItem("userName");
+  const userName = localStorage.getItem("userName"); // Still rely on localStorage, which authCheck.mjs keeps updated
 
   // --- Detect environment ---
   const repoName = "Family-Organization-JS"; // your GitHub repo name
@@ -29,7 +35,14 @@ export function createHeader() {
       <a href="${prefix}/pages/profile.html">Profile</a>
       <a href="${prefix}/pages/login.html" id="login-link">Login</a>
     `;
-    navContainer.classList.add(userName ? "nav-logged-in" : "nav-logged-out");
+    // Note: classList.add will append, you might want to use classList.remove then add for clarity
+    if (userName) {
+      navContainer.classList.add("nav-logged-in");
+      navContainer.classList.remove("nav-logged-out");
+    } else {
+      navContainer.classList.add("nav-logged-out");
+      navContainer.classList.remove("nav-logged-in");
+    }
 
     const loginLink = document.getElementById("login-link");
     if (userName && loginLink) loginLink.style.display = "none";
@@ -41,10 +54,18 @@ export function createHeader() {
 
     if (logoutButton) {
       logoutButton.style.display = "inline-block";
-      logoutButton.addEventListener("click", () => {
-        localStorage.clear();
-        alert("Logged out! Redirecting...");
-        location.href = `${prefix}/pages/login.html`;
+      // --- IMPORTANT CHANGE: Use Firebase signOut ---
+      logoutButton.addEventListener("click", async () => {
+        try {
+          await signOut(auth); // Sign out the user from Firebase
+          // No need to manually clear localStorage or redirect here,
+          // as authCheck.mjs's onAuthStateChanged listener will catch the sign-out
+          // event, clear localStorage.userName, and handle the redirection.
+          alert("Logged out successfully!"); // Optional: brief message
+        } catch (error) {
+          console.error("Error signing out:", error);
+          alert("Error logging out. Please try again.");
+        }
       });
     }
   } else {
@@ -53,3 +74,4 @@ export function createHeader() {
 
   console.log("✅ Header created successfully");
 }
+

@@ -58,19 +58,26 @@
         />
       </a>
     </div>
-      <main>
+    <main>
       <h1>Family Pugh Chores</h1>
 
       <form id="chore-form">
         <select id="person-select" required>
           <option value="">Select person</option>
-          <option value="Daddy">Daddy</option>
-          <option value="Mummy">Mummy</option>
-          <option value="Lily">Lily</option>
-          <option value="Scarlet">Scarlet</option>
-          <option value="Ollie">Ollie</option>
+          <!-- REMOVE these lines from your HTML -->
+          <!-- <option value="Daddy">Daddy</option> -->
+          <!-- <option value="Mummy">Mummy</option> -->
+          <!-- <option value="Lily">Lily</option> -->
+          <!-- <option value="Scarlet">Scarlet</option> -->
+          <!-- <option value="Ollie">Ollie</option> -->
+          <!-- The JavaScript in chores.mjs will add them -->
         </select>
-        <input type="text" id="chore-input" placeholder="New chore..." required />
+        <input
+          type="text"
+          id="chore-input"
+          placeholder="New chore..."
+          required
+        />
         <button type="submit" class="button">Add Chore</button>
       </form>
 
@@ -101,6 +108,7 @@
         <h2>Completed Chores</h2>
       </section>
     </main>
+
     <footer>
       <div class="logo-container-footer">
         <a href="index.html" class="footer-logo">

@@ -1,3 +1,9 @@
+// scripts/login.mjs
+
+// Import Firebase Authentication methods and your initialized 'auth' instance
+import { auth } from "../src/firebase.js"; // Corrected path to your firebase.js
+import { signInWithEmailAndPassword } from "firebase/auth"; // Import the specific Firebase sign-in function
+
 import { createHeader } from "./header.mjs";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -12,14 +18,15 @@ document.addEventListener("DOMContentLoaded", () => {
   loginForm.id = "loginForm";
   loginForm.classList.add("form");
 
-  // Username
-  const usernameInput = document.createElement("input");
-  usernameInput.id = "username";
-  usernameInput.name = "username";
-  usernameInput.placeholder = "Username";
-  usernameInput.required = true;
+  // --- IMPORTANT CHANGE: Use Email for Firebase Authentication ---
+  const emailInput = document.createElement("input"); // Changed from usernameInput
+  emailInput.id = "email"; // Changed ID to email
+  emailInput.name = "email";
+  emailInput.type = "email"; // Set type to email for better input handling
+  emailInput.placeholder = "Email"; // Changed placeholder
+  emailInput.required = true;
 
-  // Password
+  // Password (remains the same)
   const passwordInput = document.createElement("input");
   passwordInput.id = "password";
   passwordInput.name = "password";
@@ -31,38 +38,50 @@ document.addEventListener("DOMContentLoaded", () => {
   const submitButton = document.createElement("button");
   submitButton.type = "submit";
   submitButton.textContent = "Login";
-  // Option 1: class
   submitButton.classList.add("button");
-
-  // Option 2: id
   submitButton.id = "button";
 
-  loginForm.append(usernameInput, passwordInput, submitButton);
+  // Append email and password inputs to the form
+  loginForm.append(emailInput, passwordInput, submitButton); // Use emailInput
   formContainer.appendChild(loginForm);
 
-  const users = [
-    { username: "Mummy", password: "1234" },
-    { username: "Daddy", password: "1234" },
-    { username: "Lily", password: "abcd" },
-    { username: "Scarlet", password: "abcd" },
-  ];
-
-  loginForm.addEventListener("submit", (e) => {
+  // --- IMPORTANT CHANGE: Replace static 'users' array with Firebase Auth logic ---
+  loginForm.addEventListener("submit", async (e) => {
+    // Made the event listener async
     e.preventDefault();
 
-    const username = usernameInput.value.trim();
+    const email = emailInput.value.trim(); // Get email from the input
     const password = passwordInput.value.trim();
-    const user = users.find(
-      (u) => u.username === username && u.password === password
-    );
 
-    if (user) {
-      localStorage.setItem("userName", user.username);
-      messageElement.textContent = `Welcome, ${user.username}! Redirecting...`;
+    messageElement.textContent = "Attempting login...";
+    messageElement.style.color = "blue";
+
+    try {
+      // Use Firebase's signInWithEmailAndPassword to authenticate
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user; // Get the user object from the successful login
+
+      // Firebase automatically manages the user session securely.
+      // Update localStorage for compatibility with your existing userName logic,
+      // but ideally, you'll eventually use the `user` object directly from Firebase Auth.
+      localStorage.setItem(
+        "userName",
+        user.displayName || user.email.split("@")[0]
+      ); // Fallback to email prefix if no displayName
+
+      messageElement.textContent = `Welcome, ${localStorage.getItem(
+        "userName"
+      )}! Redirecting...`;
       messageElement.style.color = "green";
       setTimeout(() => (window.location.href = "../index.html"), 1000);
-    } else {
-      messageElement.textContent = "Invalid username or password.";
+    } catch (error) {
+      // Handle errors from Firebase Authentication
+      console.error("Firebase Login Error:", error.code, error.message);
+      messageElement.textContent = `Login failed: ${error.message}`;
       messageElement.style.color = "red";
     }
   });
