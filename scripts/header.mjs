@@ -1,40 +1,65 @@
+// scripts/header.mjs
+
 import { auth } from "../src/firebase.js";
 import { signOut } from "firebase/auth";
 
 export function createHeader() {
   const navContainer = document.getElementById("nav-container");
-  const logoutButton = document.getElementById("logout-button");
 
-  // --- Simplified prefix for Netlify/general static hosting ---
-  // If your build output always places the 'pages' directory directly
-  // under the site root, then an empty prefix, or even better,
-  // paths starting with '/' will work reliably.
-  let prefix = ""; // Or you can even remove this variable and hardcode "/" below
-
-  // You can still keep your GitHub Pages logic if you plan to deploy there too,
-  // but ensure it's specifically triggered. For Netlify, this usually won't match.
-  const repoName = "Family-Organization-JS"; // Keep if still relevant for other deploys
-  if (window.location.hostname.includes("github.io")) {
-    prefix = `/${repoName}`;
+  // Only proceed if the navContainer exists
+  if (!navContainer) {
+    console.warn("Navigation container (id='nav-container') not found.");
+    return;
   }
-  // The '/pages/' check might not be needed if your base URLs are clean on Netlify
-  // else if (window.location.pathname.includes("/pages/")) {
-  //   prefix = ".."; // This might cause issues if not handled carefully
-  // }
 
+  // Clear existing content in case createHeader is called multiple times (e.g., onAuthStateChanged)
+  navContainer.innerHTML = "";
 
-  // --- Build nav with absolute paths (relative to site root) ---
-  if (navContainer) {
-    navContainer.innerHTML = `
-      <a href="${prefix}/index.html">Home</a>
-      <a href="${prefix}/pages/shopping.html">Shopping List</a>
-      <a href="${prefix}/pages/calendar.html">Calendar</a>
-      <a href="${prefix}/pages/chores.html">Chores</a>
-      <a href="${prefix}/pages/login.html" id="login-link">Login</a>
+  const currentUser = auth.currentUser; // Get the current user from Firebase Auth
+
+  // --- Dynamic content based on authentication state ---
+  let authLinks = "";
+  if (currentUser) {
+    // If a user is logged in, show their display name and a Logout button
+    const displayName = currentUser.displayName || currentUser.email || "User";
+    authLinks = `
+      <span class="welcome-message">Welcome, ${displayName}!</span>
+      <a href="#" id="logout-button">Logout</a>
+    `;
+  } else {
+    // If no user is logged in, show the Login link
+    authLinks = `
+      <a href="/pages/login.html" id="login-link">Login</a>
     `;
   }
 
-  // ... (logout button logic remains the same) ...
+  // --- Build the full navigation bar ---
+  // Using absolute paths for robustness with Vite/Netlify deployment
+  navContainer.innerHTML = `
+    <a href="/">Home</a>
+    <a href="/pages/shopping.html">Shopping List</a>
+    <a href="/pages/calendar.html">Calendar</a>
+    <a href="/pages/chores.html">Chores</a>
+    ${authLinks} <!-- Insert the dynamically generated authentication links -->
+  `;
 
-  console.log("✅ Header (static parts and logout listener) created.");
+  // --- Setup Logout Button Listener ---
+  // This listener is added only if the logout button is currently rendered
+  const logoutButton = document.getElementById("logout-button");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", async (e) => {
+      e.preventDefault(); // Prevent default link behavior (e.g., page reload)
+      try {
+        await signOut(auth);
+        alert("Logged out successfully!");
+        // After logout, redirect to the home page or login page
+        window.location.replace("/"); // Use replace to prevent back button from going to logged-in state
+      } catch (error) {
+        console.error("Error signing out:", error);
+        alert("Error logging out. Please try again.");
+      }
+    });
+  }
+
+  console.log("✅ Header (dynamic parts and logout listener) created/updated.");
 }
