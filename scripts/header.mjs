@@ -24,7 +24,6 @@ export function createHeader() {
       <a href="${prefix}/pages/shopping.html">Shopping List</a>
       <a href="${prefix}/pages/calendar.html">Calendar</a>
       <a href="${prefix}/pages/chores.html">Chores</a>
-      <!-- Profile Page Link Removed -->
       <a href="${prefix}/pages/login.html" id="login-link">Login</a>
     `;
   }
