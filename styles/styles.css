@@ -16,7 +16,7 @@ h1 {
   padding: 10px 20px;
   border: solid 2px var(--raspberry);
   height: auto;
-  margin: 0 20px;
+  margin: 0 20px 20px;
   width: calc(100% - 40px);
 }
 
