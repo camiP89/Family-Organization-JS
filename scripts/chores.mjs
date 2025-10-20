@@ -1,15 +1,16 @@
 // chores.mjs
 
 import { createHeader } from "./header.mjs";
-import { protectPage } from "./authCheck.mjs";
+import { protectPage } from "./authCheck.mjs"; // protectPage might still be useful for initial hard redirects
 import { showSpinner, hideSpinner } from "./loadingSpinner.mjs";
 import { auth, db } from "../src/firebase.js";
+import { onAuthStateChanged } from "firebase/auth"; // <-- Ensure this is imported!
 import {
   collection,
   query,
   where,
   orderBy,
-  onSnapshot,
+  onSnapshot, // <-- Ensure this is imported!
   addDoc,
   updateDoc,
   deleteDoc,
@@ -18,24 +19,80 @@ import {
 } from "firebase/firestore";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  showSpinner();
+  showSpinner(); // Show spinner immediately when page starts loading
 
-  let prefix = ".";
-  const repoName = "Family-Organization-JS";
-  if (window.location.hostname.includes("github.io")) {
-    prefix = `/${repoName}`;
-  } else if (window.location.pathname.includes("/pages/")) {
-    prefix = "..";
-  }
+  // Helper function for prefix logic (for redirects)
+  const getPrefix = () => {
+    const repoName = "Family-Organization-JS";
+    if (window.location.hostname.includes("github.io")) {
+      return `/${repoName}`;
+    }
+    // For Netlify with Vite, direct root paths are typically used for absolute paths.
+    // So, if login.html is at /pages/login.html, prefix remains empty for redirects.
+    return "";
+  };
+  const prefix = getPrefix();
 
-  const isAuthenticated = await protectPage(`${prefix}/pages/login.html`);
-  if (!isAuthenticated) {
-    hideSpinner();
-    return;
-  }
+  let unsubscribeActiveChores = null;
+  let unsubscribeCompletedChores = null;
 
-  createHeader();
+  // These flags ensure the spinner is only hidden once all initial data has loaded
+  let initialActiveChoresLoaded = false;
+  let initialCompletedChoresLoaded = false;
 
+  // isAdminUser needs to be declared here to be accessible within various functions
+  let isAdminUser = false;
+
+  // --- CORE AUTHENTICATION LISTENER ---
+  // This listener ensures we only render/fetch after auth state is known
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // --- USER IS LOGGED IN ---
+      console.log("User is logged in:", user.email);
+
+      // 1. Create/Update the header with the correct login state
+      createHeader(); // This should now correctly show "Welcome, [User]" and Logout
+
+      // 2. Determine if the current user is an admin (needs to be done after user is confirmed)
+      try {
+        // Force refresh of the ID token to ensure custom claims are up-to-date
+        const tokenResult = await user.getIdTokenResult(true);
+        isAdminUser = tokenResult.claims.admin === true;
+        console.log(`User ${user.email} is admin: ${isAdminUser}`);
+      } catch (error) {
+        console.error("Error getting user custom claims:", error);
+        isAdminUser = false; // Fallback: If there's an error, assume not admin
+      }
+
+      // 3. Setup Firestore listeners and other auth-dependent content
+      // Now that auth state and isAdminUser are known, we can safely set up data listeners.
+      setupFirestoreListeners();
+
+      // IMPORTANT: No longer calling protectPage directly here.
+      // The redirect if not authenticated is now handled in the 'else' block below.
+    } else {
+      // --- USER IS LOGGED OUT ---
+      console.log("User is logged out.");
+
+      // 1. Create/Update the header to show the "Login" button
+      createHeader();
+
+      // 2. Redirect to login page
+      // Use window.location.replace to prevent going back to chores page via history
+      window.location.replace(`${prefix}/pages/login.html`);
+
+      // Clear any Firestore listeners if user logs out (prevent memory leaks)
+      if (unsubscribeActiveChores) unsubscribeActiveChores();
+      if (unsubscribeCompletedChores) unsubscribeCompletedChores();
+
+      hideSpinner(); // Hide spinner as we are redirecting
+      return; // Stop further execution on this page as user is not authenticated
+    }
+    // Note: The main hideSpinner call happens in tryHideSpinner after Firestore data has loaded.
+  });
+  // --- END CORE AUTHENTICATION LISTENER ---
+
+  // --- These parts can be set up immediately as they don't depend on auth state for creation ---
   const form = document.getElementById("chore-form");
   const personSelect = document.getElementById("person-select");
   const choreInput = document.getElementById("chore-input");
@@ -48,29 +105,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     option.textContent = name;
     personSelect.appendChild(option);
   });
+  // --- END static setup ---
 
-  let unsubscribeActiveChores = null;
-  let unsubscribeCompletedChores = null;
-
-  let initialActiveChoresLoaded = false;
-  let initialCompletedChoresLoaded = false;
-  let isAdminUser = false; // Initialize isAdminUser flag
-
-  // --- IMPORTANT: Determine if the current user is an admin ---
-  const currentUser = auth.currentUser;
-  if (currentUser) {
-    try {
-      // Force refresh of the ID token to ensure custom claims are up-to-date
-      const tokenResult = await currentUser.getIdTokenResult(true);
-      isAdminUser = tokenResult.claims.admin === true;
-      console.log(`User ${currentUser.email} is admin: ${isAdminUser}`);
-    } catch (error) {
-      console.error("Error getting user custom claims:", error);
-      isAdminUser = false; // Fallback: If there's an error, assume not admin
-    }
-  }
-  // --- END IMPORTANT ---
-
+  // Helper function to hide spinner once both active and completed chores are loaded
   function tryHideSpinner() {
     if (initialActiveChoresLoaded && initialCompletedChoresLoaded) {
       hideSpinner();
@@ -178,6 +215,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         // --- IMPORTANT: Only render the remove button if the current user is an admin ---
+        // isAdminUser is now defined in the outer scope and correctly set by onAuthStateChanged
         if (isAdminUser) {
           const removeBtn = document.createElement("button");
           removeBtn.textContent = "🗑️";
@@ -209,8 +247,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     tryHideSpinner();
   }
 
+  // setupFirestoreListeners no longer needs isAdminUser as argument because isAdminUser is now in a higher scope.
   function setupFirestoreListeners() {
-    if (unsubscribeActiveChores) unsubscribeActiveChores();
+    if (unsubscribeActiveChores) unsubscribeActiveChoores();
     if (unsubscribeCompletedChores) unsubscribeCompletedChores();
 
     const activeChoresQuery = query(
@@ -247,6 +286,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           id: doc.id,
           ...doc.data(),
         }));
+        // isAdminUser is accessible here from the outer onAuthStateChanged scope
         renderCompletedChores(completedChores);
       },
       (error) => {
@@ -258,8 +298,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
-  setupFirestoreListeners();
-
+  // The form event listener can stay outside, but must check auth.currentUser on submission
   if (form) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -278,6 +317,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const currentAuthedUser = auth.currentUser;
       if (!currentAuthedUser) {
         console.error("User not authenticated to add chore.");
+        alert("You must be logged in to add a chore.");
         return;
       }
 

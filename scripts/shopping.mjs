@@ -1,12 +1,13 @@
 // shopping.mjs
 
 import { createHeader } from "./header.mjs";
-import { protectPage } from "./authCheck.mjs";
+// import { protectPage } from "./authCheck.mjs"; // No longer directly calling protectPage
 import { auth, db } from "../src/firebase.js"; // Import auth and db
+import { onAuthStateChanged } from "firebase/auth"; // <--- ENSURE THIS IS IMPORTED!
 import {
   collection,
   query,
-  orderBy, // No longer need 'where' for user-specific filtering
+  orderBy,
   onSnapshot, // For real-time updates
   addDoc, // For adding new items
   updateDoc, // For editing existing items
@@ -16,31 +17,64 @@ import {
 } from "firebase/firestore";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  createHeader();
-
-  let prefix = ".";
-  const repoName = "Family-Organization-JS"; // your repo name
-  if (window.location.hostname.includes("github.io")) {
-    prefix = `/${repoName}`;
-  } else if (window.location.pathname.includes("/pages/")) {
-    prefix = "..";
-  }
-
-  const isAuthenticated = await protectPage(`${prefix}/pages/login.html`);
-  if (!isAuthenticated) return;
+  // Helper function for prefix logic (for redirects)
+  const getPrefix = () => {
+    const repoName = "Family-Organization-JS"; // your repo name
+    if (window.location.hostname.includes("github.io")) {
+      return `/${repoName}`;
+    }
+    return ""; // For Netlify with Vite, direct root paths are typically used for absolute paths.
+  };
+  const prefix = getPrefix();
 
   const form = document.getElementById("shopping-form");
   const shoppingInput = document.getElementById("shopping-item");
   const shoppingListEl = document.querySelector(".shopping-list");
 
+  // Basic check for required elements on the page
   if (!form || !shoppingInput || !shoppingListEl) {
     console.error(
       "Required shopping list elements not found (form, input, or list)."
     );
+    // You might want to display a user-friendly message or redirect here
     return;
   }
 
   let unsubscribeShoppingList = null; // To manage the Firestore real-time listener
+
+  // --- CORE AUTHENTICATION LISTENER ---
+  // This listener ensures we only render/fetch after auth state is known
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // --- USER IS LOGGED IN ---
+      console.log("User is logged in:", user.email);
+
+      // 1. Create/Update the header with the correct login state
+      createHeader(); // This should now correctly show "Welcome, [User]" and Logout
+
+      // 2. Setup Firestore listeners and enable form submission
+      // Now that auth state is known, we can safely set up data listeners and enable interaction.
+      setupShoppingListListener();
+      form.style.display = "block"; // Assuming your form is hidden by default for logged out users
+    } else {
+      // --- USER IS LOGGED OUT ---
+      console.log("User is logged out.");
+
+      // 1. Create/Update the header to show the "Login" button
+      createHeader();
+
+      // 2. Clear any active Firestore listeners
+      if (unsubscribeShoppingList) {
+        unsubscribeShoppingList();
+        unsubscribeShoppingList = null; // Reset the variable
+      }
+
+      // 3. Redirect to login page (use replace to prevent back button issues)
+      window.location.replace(`${prefix}/pages/login.html`);
+      return; // Stop further execution on this page as user is not authenticated
+    }
+  });
+  // --- END CORE AUTHENTICATION LISTENER ---
 
   // Function to render items from the current `items` array fetched from Firestore
   function renderItems(items) {
@@ -90,16 +124,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Set up the real-time listener for the shared shopping list from Firestore
-  // This function no longer needs a userId argument
   function setupShoppingListListener() {
     if (unsubscribeShoppingList) {
       unsubscribeShoppingList();
     }
 
-    // Query the 'shoppingItems' collection without filtering by userId
     const q = query(
       collection(db, "shoppingItems"),
-      orderBy("createdAt", "asc") // Still good to order them for consistency
+      orderBy("createdAt", "asc")
     );
 
     unsubscribeShoppingList = onSnapshot(
@@ -116,7 +148,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       },
       (error) => {
         console.error("Error listening to shopping list in Firestore:", error);
-        // It's crucial here to inform the user about the index if this error happens again
         alert(
           "Error loading shopping list. This might require a Firestore index. Check the browser console for details."
         );
@@ -124,37 +155,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
-  // After successful authentication, set up the shared listener
-  // We no longer pass auth.currentUser.uid
-  setupShoppingListListener();
-
   // Handle form submission to add new item to Firestore
+  // This listener can stay outside but should always check auth.currentUser
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const item = shoppingInput.value.trim();
     if (!item) return;
 
-    const currentUser = auth.currentUser;
+    const currentUser = auth.currentUser; // Check currentUser at the moment of submission
     if (!currentUser) {
-      // Still check if someone is logged in to allow additions
       console.error("User not authenticated to add item.");
+      alert("You must be logged in to add an item."); // User-friendly alert
       return;
     }
 
     try {
-      // Add a new document to the "shoppingItems" collection
       await addDoc(collection(db, "shoppingItems"), {
         item: item,
-        // No 'userId' field needed for access control anymore, but you *could* keep it
-        // if you want to track who added an item for display purposes, e.g., 'addedBy: currentUser.email'
         createdAt: Timestamp.now(),
       });
       console.log("Item added successfully to Firestore!");
       shoppingInput.value = "";
     } catch (error) {
       console.error("Error adding item to Firestore:", error);
+      alert("Failed to add item. Please try again.");
     }
   });
 
-  // Optional cleanup
+  // Optional cleanup: unsubscribe when the page is unloaded
+  window.addEventListener("beforeunload", () => {
+    if (unsubscribeShoppingList) unsubscribeShoppingList();
+    console.log("Firestore shopping list listener unsubscribed.");
+  });
 });
