@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Family Pugh | Home</title>
+    <script
+      src="https://kit.fontawesome.com/bfed71705b.js"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nixie+One&family=Oregano:ital@0;1&family=PT+Mono&family=Raleway:ital,wght@0,100..900;1,100..900&family=Taviraj:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Tillana:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/assets/apple-touch-icon-Cjr2E_Ps.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/assets/favicon-32x32-Bp6m8v99.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/assets/favicon-16x16-BH30RFks.png"
+    />
+    <script type="module" crossorigin src="/assets/index-CqgfSKu6.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BuWIETek.css">
+  </head>
+  <body>
+    <header>
+      <div class="mobile-header">
+        <label for="menu-checkbox" class="hamburger-icon">
+          <i class="fa-solid fa-bars"></i>
+        </label>
+      </div>
+      <input type="checkbox" id="menu-checkbox" />
+      <nav id="nav-container"></nav>
+      <div class="user-info">
+        <p id="welcome-text"></p>
+        <button id="logout-button" style="display: none">Logout</button>
+      </div>
+    </header>
+    <div class="logo-container">
+      <a href="index.html">
+        <img
+          src="/assets/family-pugh-logo-1WgY7xQ5.png"
+          alt="Family Pugh logo"
+          class="logo"
+        />
+      </a>
+    </div>
+    <main>
+      <h1>Family Homepage</h1>
+
+      <section class="dashboard-grid">
+        <!-- Current Date -->
+        <div class="dashboard-card" id="date-card">
+          <h2 id="current-date"></h2>
+        </div>
+
+        <!-- Today's Calendar Events -->
+        <div class="dashboard-card" id="calendar-card">
+          <h3>Today's Events</h3>
+          <div id="today-calendar-events">
+            <p>Loading events...</p>
+          </div>
+        </div>
+
+        <!-- Personal To-Do List -->
+        <div class="dashboard-card" id="todo-card">
+          <h3>My Personal To-Do List</h3>
+          <ul id="todo-list">
+            <p>Loading To-Dos...</p>
+          </ul>
+          <!-- Form to add new To-Do items -->
+          <form id="add-todo-form" style="display: none; margin-top: 15px">
+            <input
+              type="text"
+              id="add-todo-input"
+              placeholder="New To-Do item..."
+              required
+            />
+            <button type="submit">Add</button>
+          </form>
+        </div>
+
+        <!-- Personal Remember List -->
+        <div class="dashboard-card" id="remember-card">
+          <h3>My Personal Remember List</h3>
+          <ul id="remember-list">
+            <p>Loading Reminders...</p>
+          </ul>
+          <!-- Form to add new Remember items -->
+          <form id="add-remember-form" style="display: none; margin-top: 15px">
+            <input
+              type="text"
+              id="add-remember-input"
+              placeholder="New Reminder..."
+              required
+            />
+            <button type="submit">Add</button>
+          </form>
+        </div>
+
+        <!-- Chores for the Day -->
+        <div class="dashboard-card" id="chores-card">
+          <h3>My Active Chores</h3>
+          <div id="today-chores">
+            <p>Loading chores...</p>
+          </div>
+        </div>
+
+        <!-- Shopping List Status -->
+        <div class="dashboard-card" id="shopping-card">
+          <h3>Shopping List</h3>
+          <p id="shopping-list-status">Loading status...</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="logo-container-footer">
+        <a href="index.html" class="footer-logo">
+          <img
+            src="/assets/family-pugh-logo-1WgY7xQ5.png"
+            alt="Family Pugh logo"
+            class="logo-footer"
+          />
+        </a>
+      </div>
+      <p class="copyright">Copyright &copy; FamilyPugh</p>
+    </footer>
+  </body>
+</html>
