@@ -63,3 +63,4 @@ export function createHeader() {
 
   console.log("✅ Header (dynamic parts and logout listener) created/updated.");
 }
+
