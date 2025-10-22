@@ -8,7 +8,9 @@ export function createHeader() {
 
   // Only proceed if the navContainer exists
   if (!navContainer) {
-    console.warn("Navigation container (id='nav-container') not found.");
+    console.warn(
+      "Navigation container (id='nav-container') not found. Header will not be created."
+    );
     return;
   }
 
@@ -28,24 +30,25 @@ export function createHeader() {
     `;
   } else {
     // If no user is logged in, show the Login link
+    // Note: The /pages/login.html link will now be part of the nav, not a separate user-info div.
     authLinks = `
       <a href="/pages/login.html" id="login-link">Login</a>
     `;
   }
 
-  // --- Build the full navigation bar ---
+  // --- Build the full navigation bar (including dynamic auth links) ---
   // Using absolute paths for robustness with Vite/Netlify deployment
   navContainer.innerHTML = `
     <a href="/">Home</a>
     <a href="/pages/shopping.html">Shopping List</a>
     <a href="/pages/calendar.html">Calendar</a>
     <a href="/pages/chores.html">Chores</a>
-    ${authLinks} <!-- Insert the dynamically generated authentication links -->
+    ${authLinks} <!-- Insert the dynamically generated authentication links directly into the nav -->
   `;
 
   // --- Setup Logout Button Listener ---
-  // This listener is added only if the logout button is currently rendered
-  const logoutButton = document.getElementById("logout-button");
+  // This listener is added only if the logout button is currently rendered within navContainer
+  const logoutButton = document.getElementById("logout-button"); // Look for the one we just created
   if (logoutButton) {
     logoutButton.addEventListener("click", async (e) => {
       e.preventDefault(); // Prevent default link behavior (e.g., page reload)
@@ -63,4 +66,3 @@ export function createHeader() {
 
   console.log("✅ Header (dynamic parts and logout listener) created/updated.");
 }
-
