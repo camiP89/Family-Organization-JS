@@ -5,7 +5,7 @@
 import { auth, db } from "../src/firebase.js";
 
 // Import Firebase Auth functions
-import { onAuthStateChanged } from "firebase/auth"; // <-- THIS IS CRITICAL
+import { onAuthStateChanged } from "firebase/auth";
 
 // Import Firebase Firestore functions
 import {
@@ -25,11 +25,7 @@ import {
 import { createHeader } from "./header.mjs";
 
 // Import Auth Check Logic (if it performs any other necessary initialization or checks)
-// If protectPage's only function was redirecting based on initial auth,
-// it's now superseded by the onAuthStateChanged in each page.
-// However, if it sets up localStorage or other global states, keep it.
-// For now, assuming it's not needed for the core auth flow orchestration here.
-// import "./authCheck.mjs"; // Consider if this line is still needed for index.html
+import "./authCheck.mjs";
 
 // --- 2. DOMContentLoaded Listener: Ensures HTML elements are ready ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -45,6 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const shoppingListStatusElement = document.getElementById(
     "shopping-list-status"
   );
+  const shoppingCard = document.getElementById("shopping-card");
+  const calendarCard = document.getElementById("calendar-card");
+  // NEW: Get reference to the chores card
+  const choresCard = document.getElementById("chores-card");
 
   // Add Item Forms
   const addTodoForm = document.getElementById("add-todo-form");
@@ -165,7 +165,9 @@ document.addEventListener("DOMContentLoaded", () => {
       (error) => {
         console.error("Error fetching calendar events:", error);
         todayCalendarEventsElement.innerHTML =
-          "<p>Error loading calendar events.</p>";
+          "<p>Error loading calendar events. The error was: " +
+          error.message +
+          "</p>";
       }
     );
   }
@@ -440,7 +442,6 @@ document.addEventListener("DOMContentLoaded", () => {
           shoppingListStatusElement.style.color = "green";
         } else {
           shoppingListStatusElement.textContent = `You have ${querySnapshot.size} items on your shopping list.`;
-          shoppingListStatusElement.style.color = "red";
         }
       },
       (error) => {
@@ -450,6 +451,85 @@ document.addEventListener("DOMContentLoaded", () => {
         shoppingListStatusElement.style.color = "red";
       }
     );
+  }
+
+  // --- Attach Event Listeners for Adding Items ---
+  if (addTodoForm) {
+    addTodoForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const user = auth.currentUser; // Check auth.currentUser at the moment of submission
+      if (user && addTodoInput && addTodoInput.value) {
+        addTodoItem(addTodoInput.value, user.uid);
+      } else if (!user) {
+        alert("Please log in to add a To-Do item.");
+      }
+    });
+  }
+
+  if (addRememberForm) {
+    addRememberForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const user = auth.currentUser; // Check auth.currentUser at the moment of submission
+      if (user && addRememberInput && addRememberInput.value) {
+        addRememberItem(addRememberInput.value, user.uid);
+      } else if (!user) {
+        alert("Please log in to add a reminder.");
+      }
+    });
+  }
+
+  // --- Add click listener for the shopping card ---
+  if (shoppingCard) {
+    shoppingCard.style.cursor = "pointer"; // Indicate it's clickable
+    shoppingCard.addEventListener("click", () => {
+      // Logic to determine the correct path, similar to header.mjs
+      const repoName = "Family-Organization-JS"; // Keep consistent with header.mjs
+      let prefix = ".";
+
+      if (window.location.hostname.includes("github.io")) {
+        prefix = `/${repoName}`;
+      } else if (window.location.pathname.includes("/pages/")) {
+        prefix = "..";
+      }
+
+      window.location.href = `${prefix}/pages/shopping.html`;
+    });
+  }
+
+  // --- Add click listener for the calendar card ---
+  if (calendarCard) {
+    calendarCard.style.cursor = "pointer"; // Indicate it's clickable
+    calendarCard.addEventListener("click", () => {
+      // Logic to determine the correct path, similar to header.mjs
+      const repoName = "Family-Organization-JS"; // Keep consistent with header.mjs
+      let prefix = ".";
+
+      if (window.location.hostname.includes("github.io")) {
+        prefix = `/${repoName}`;
+      } else if (window.location.pathname.includes("/pages/")) {
+        prefix = "..";
+      }
+
+      window.location.href = `${prefix}/pages/calendar.html`;
+    });
+  }
+
+  // NEW: Add click listener for the chores card
+  if (choresCard) {
+    choresCard.style.cursor = "pointer"; // Indicate it's clickable
+    choresCard.addEventListener("click", () => {
+      // Logic to determine the correct path, similar to header.mjs
+      const repoName = "Family-Organization-JS"; // Keep consistent with header.mjs
+      let prefix = ".";
+
+      if (window.location.hostname.includes("github.io")) {
+        prefix = `/${repoName}`;
+      } else if (window.location.pathname.includes("/pages/")) {
+        prefix = "..";
+      }
+
+      window.location.href = `${prefix}/pages/chores.html`;
+    });
   }
 
   // --- Auth State Change Listener (The Orchestrator) ---
@@ -492,44 +572,20 @@ document.addEventListener("DOMContentLoaded", () => {
       if (rememberListElement)
         rememberListElement.innerHTML =
           "<li>Please log in to see your Remember list.</li>";
-      if (myActiveChoresElement)
+      if (myActiveChooresElement)
+        // Corrected typo here as well
         myActiveChoresElement.innerHTML =
           "<p>Please log in to see your active chores.</p>";
       if (shoppingListStatusElement)
         shoppingListStatusElement.textContent =
           "Please log in to see shopping list status.";
+      shoppingListStatusElement.style.color = "gray"; // Reset color to gray for logged out state
 
       // Hide add forms
       if (addTodoForm) addTodoForm.style.display = "none";
       if (addRememberForm) addRememberForm.style.display = "none";
     }
   });
-
-  // --- Attach Event Listeners for Adding Items (moved here to always be active) ---
-  // Ensure these forms check for `auth.currentUser` on submission, which they already do.
-  if (addTodoForm) {
-    addTodoForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const user = auth.currentUser; // Check auth.currentUser at the moment of submission
-      if (user && addTodoInput && addTodoInput.value) {
-        addTodoItem(addTodoInput.value, user.uid);
-      } else if (!user) {
-        alert("Please log in to add a To-Do item.");
-      }
-    });
-  }
-
-  if (addRememberForm) {
-    addRememberForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const user = auth.currentUser; // Check auth.currentUser at the moment of submission
-      if (user && addRememberInput && addRememberInput.value) {
-        addRememberItem(addRememberInput.value, user.uid);
-      } else if (!user) {
-        alert("Please log in to add a reminder.");
-      }
-    });
-  }
 
   console.log("✅ All main DOM listeners and auth watcher initialized.");
 });
