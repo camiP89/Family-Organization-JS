@@ -5,7 +5,7 @@
 import { auth, db } from "../src/firebase.js";
 
 // Import Firebase Auth functions
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth"; // <-- THIS IS CRITICAL
 
 // Import Firebase Firestore functions
 import {
@@ -18,47 +18,41 @@ import {
   deleteDoc,
   doc,
   updateDoc,
-  Timestamp, // Make sure Timestamp is imported for createdAt dates
+  Timestamp,
 } from "firebase/firestore";
 
 // Import Header Logic
 import { createHeader } from "./header.mjs";
 
-// Import Auth Check Logic (assuming it handles redirects/localStorage based on auth state)
-import "./authCheck.mjs"; // This script will run as soon as it's imported
+// Import Auth Check Logic (if it performs any other necessary initialization or checks)
+// If protectPage's only function was redirecting based on initial auth,
+// it's now superseded by the onAuthStateChanged in each page.
+// However, if it sets up localStorage or other global states, keep it.
+// For now, assuming it's not needed for the core auth flow orchestration here.
+// import "./authCheck.mjs"; // Consider if this line is still needed for index.html
 
 // --- 2. DOMContentLoaded Listener: Ensures HTML elements are ready ---
 document.addEventListener("DOMContentLoaded", () => {
-  // --- 2.1. Initialize Header ---
-  createHeader(); // Build the static parts of the header and attach logout listener
-  console.log("App initialized and header created.");
-
-  // --- 2.2. Get DOM Elements ---
-  // Header Elements
-  const welcomeTextElement = document.getElementById("welcome-text"); // From your header
-  const logoutButton = document.getElementById("logout-button"); // From your header
-  const loginLink = document.getElementById("login-link"); // The login link in your nav
-  const navContainer = document.getElementById("nav-container"); // The nav element itself
-
-  // Main Content Elements
+  // --- 2.1. Get DOM Elements ---
+  // Only get elements that index.mjs directly manipulates, NOT header elements
   const currentDateElement = document.getElementById("current-date");
   const todayCalendarEventsElement = document.getElementById(
     "today-calendar-events"
   );
   const todoListElement = document.getElementById("todo-list");
   const rememberListElement = document.getElementById("remember-list");
-  const myActiveChoresElement = document.getElementById("today-chores"); // Renamed for clarity, but still uses "today-chores" ID
+  const myActiveChoresElement = document.getElementById("today-chores");
   const shoppingListStatusElement = document.getElementById(
     "shopping-list-status"
   );
 
-  // Add Item Forms (from your main content)
+  // Add Item Forms
   const addTodoForm = document.getElementById("add-todo-form");
   const addTodoInput = document.getElementById("add-todo-input");
   const addRememberForm = document.getElementById("add-remember-form");
   const addRememberInput = document.getElementById("add-remember-input");
 
-  // --- Helper functions (defined within DOMContentLoaded scope) ---
+  // --- Helper functions ---
 
   // Helper function to derive a "family name" from the user object
   function getUserFamilyName(user) {
@@ -80,9 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return true;
   };
 
-  // --- Functions to Fetch and Render Each Section ---
-
-  // Current Date Display
+  // Current Date Display (Does NOT depend on user login)
   function renderCurrentDate() {
     if (!ensureElementExists(currentDateElement, "current-date")) return;
     const today = new Date();
@@ -98,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // Today's Calendar Events (Displaying as bullet points in a column)
+  // Today's Calendar Events
   function fetchAndRenderTodayCalendarEvents(user) {
     if (
       !ensureElementExists(todayCalendarEventsElement, "today-calendar-events")
@@ -120,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
       calendarRef,
       where("timestamp", ">=", Timestamp.fromDate(startOfDay)),
       where("timestamp", "<=", Timestamp.fromDate(endOfDay)),
-      orderBy("timestamp") // Order by time for better display
+      orderBy("timestamp")
     );
 
     onSnapshot(
@@ -130,20 +122,19 @@ document.addEventListener("DOMContentLoaded", () => {
           id: doc.id,
           ...doc.data(),
         }));
-        todayCalendarEventsElement.innerHTML = ""; // Clear existing content
+        todayCalendarEventsElement.innerHTML = "";
 
         if (events.length === 0) {
           todayCalendarEventsElement.innerHTML =
             "<p>No calendar events for today!</p>";
         } else {
-          const mainEventList = document.createElement("ul"); // Main list for event groupings
-          mainEventList.classList.add("today-main-events-list"); // Add a class for main list styling
+          const mainEventList = document.createElement("ul");
+          mainEventList.classList.add("today-main-events-list");
 
           events.forEach((event) => {
-            const eventGroupItem = document.createElement("li"); // Li for each date's event group
+            const eventGroupItem = document.createElement("li");
             eventGroupItem.classList.add("calendar-event-group");
 
-            // Ensure event.note is a string and split into individual lines
             const lines = String(event.note || "")
               .split("\n")
               .map((line) => line.trim())
@@ -151,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (lines.length > 0) {
               const bulletedNoteList = document.createElement("ul");
-              bulletedNoteList.classList.add("today-bulleted-notes"); // For styling individual notes
+              bulletedNoteList.classList.add("today-bulleted-notes");
 
               lines.forEach((line) => {
                 const li = document.createElement("li");
@@ -166,7 +157,6 @@ document.addEventListener("DOMContentLoaded", () => {
           if (mainEventList.children.length > 0) {
             todayCalendarEventsElement.appendChild(mainEventList);
           } else {
-            // If after processing, no valid events remain (e.g., all notes were empty lines)
             todayCalendarEventsElement.innerHTML =
               "<p>No calendar events for today!</p>";
           }
@@ -193,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const q = query(
       todoCollectionRef,
       where("userId", "==", user.uid),
-      orderBy("createdAt", "desc") // Order by creation date
+      orderBy("createdAt", "desc")
     );
 
     onSnapshot(
@@ -205,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }));
         console.log("My personal To-Do items:", todoItems);
 
-        todoListElement.innerHTML = ""; // Clear existing list items
+        todoListElement.innerHTML = "";
 
         if (todoItems.length === 0) {
           todoListElement.innerHTML = "<li>No To-Do items! Add one below.</li>";
@@ -226,7 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
           `;
             todoListElement.appendChild(li);
           });
-          // Attach event listeners after rendering
           todoListElement.querySelectorAll(".delete-btn").forEach((button) => {
             button.addEventListener("click", (e) =>
               deleteTodoItem(e.currentTarget.dataset.id)
@@ -253,7 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Add To-Do Item
   async function addTodoItem(text, userId) {
-    if (!text.trim()) return; // Don't add empty items
+    if (!text.trim()) return;
     try {
       await addDoc(collection(db, "todoItems"), {
         text: text.trim(),
@@ -262,7 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
         createdAt: new Date(),
       });
       console.log("To-Do item added!");
-      if (addTodoInput) addTodoInput.value = ""; // Clear input
+      if (addTodoInput) addTodoInput.value = "";
     } catch (error) {
       console.error("Error adding To-Do item:", error);
       alert("Could not add To-Do item.");
@@ -295,7 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Personal Remember List (similar to To-Do List)
+  // Personal Remember List
   function fetchAndRenderUserRememberItems(user) {
     if (!ensureElementExists(rememberListElement, "remember-list")) return;
     if (!user) {
@@ -361,7 +350,7 @@ document.addEventListener("DOMContentLoaded", () => {
         createdAt: new Date(),
       });
       console.log("Remember item added!");
-      if (addRememberInput) addRememberInput.value = ""; // Clear input
+      if (addRememberInput) addRememberInput.value = "";
     } catch (error) {
       console.error("Error adding Remember item:", error);
       alert("Could not add Remember item.");
@@ -381,7 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // My Active Chores (now fetches all uncompleted chores for the user)
+  // My Active Chores
   function fetchAndRenderMyActiveChores(user) {
     if (!ensureElementExists(myActiveChoresElement, "today-chores")) return;
     if (!user) {
@@ -463,11 +452,65 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // --- Attach Event Listeners for Adding Items ---
+  // --- Auth State Change Listener (The Orchestrator) ---
+  onAuthStateChanged(auth, async (user) => {
+    // Call createHeader() here to set up the dynamic header
+    createHeader();
+
+    // Always render current date (doesn't depend on auth state, but can be here for consistent flow)
+    renderCurrentDate();
+
+    if (user) {
+      // --- USER IS LOGGED IN ---
+      console.log("👤 User is logged in:", user.displayName || user.email);
+
+      // Force refresh of the ID token to ensure custom claims and displayName are up-to-date
+      // This is important if displayName was just set on another page (e.g., login.html)
+      await user.getIdTokenResult(true);
+
+      // Call all fetch/render functions that depend on authentication
+      fetchAndRenderTodayCalendarEvents(user);
+      fetchAndRenderUserTodoItems(user);
+      fetchAndRenderUserRememberItems(user);
+      fetchAndRenderMyActiveChores(user);
+      fetchAndRenderShoppingListStatus(user);
+
+      // Show/hide add forms based on login status
+      if (addTodoForm) addTodoForm.style.display = "flex";
+      if (addRememberForm) addRememberForm.style.display = "flex";
+    } else {
+      // --- USER IS LOGGED OUT ---
+      console.log("👤 No user logged in.");
+
+      // Clear or hide user-specific content
+      if (todayCalendarEventsElement)
+        todayCalendarEventsElement.innerHTML =
+          "<p>Please log in to see calendar events.</p>";
+      if (todoListElement)
+        todoListElement.innerHTML =
+          "<li>Please log in to see your To-Do list.</li>";
+      if (rememberListElement)
+        rememberListElement.innerHTML =
+          "<li>Please log in to see your Remember list.</li>";
+      if (myActiveChoresElement)
+        myActiveChoresElement.innerHTML =
+          "<p>Please log in to see your active chores.</p>";
+      if (shoppingListStatusElement)
+        shoppingListStatusElement.textContent =
+          "Please log in to see shopping list status.";
+
+      // Hide add forms
+      if (addTodoForm) addTodoForm.style.display = "none";
+      if (addRememberForm) addRememberForm.style.display = "none";
+    }
+  });
+
+  // --- Attach Event Listeners for Adding Items (moved here to always be active) ---
+  // Ensure these forms check for `auth.currentUser` on submission, which they already do.
   if (addTodoForm) {
     addTodoForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      const user = auth.currentUser;
+      const user = auth.currentUser; // Check auth.currentUser at the moment of submission
       if (user && addTodoInput && addTodoInput.value) {
         addTodoItem(addTodoInput.value, user.uid);
       } else if (!user) {
@@ -479,7 +522,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (addRememberForm) {
     addRememberForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      const user = auth.currentUser;
+      const user = auth.currentUser; // Check auth.currentUser at the moment of submission
       if (user && addRememberInput && addRememberInput.value) {
         addRememberItem(addRememberInput.value, user.uid);
       } else if (!user) {
@@ -487,61 +530,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-
-  // --- Auth State Change Listener (The Orchestrator) ---
-  onAuthStateChanged(auth, async (user) => {
-    // Update header welcome text
-    if (welcomeTextElement) {
-      if (user) {
-        // Force refresh of the ID token to ensure custom claims and displayName are up-to-date
-        await user.getIdTokenResult(true);
-
-        console.log("👤 Logged in as:", user.displayName || user.email);
-        // Prioritize displayName, fallback to email prefix
-        welcomeTextElement.textContent = `Welcome, ${
-          user.displayName || user.email.split("@")[0]
-        }!`;
-        welcomeTextElement.style.display = "inline-block"; // Ensure it's visible
-      } else {
-        console.log("👤 No user logged in.");
-        welcomeTextElement.textContent = ""; // Clear welcome text
-        welcomeTextElement.style.display = "none"; // Hide if logged out
-      }
-    }
-
-    // Update logout button and login link visibility
-    if (logoutButton) {
-      logoutButton.style.display = user ? "inline-block" : "none"; // Show if logged in, hide if logged out
-    }
-    if (loginLink) {
-      loginLink.style.display = user ? "none" : "block"; // Hide login link if logged in, show if logged out
-    }
-
-    // Update navigation container classes (if you have CSS that depends on these)
-    if (navContainer) {
-      if (user) {
-        navContainer.classList.add("nav-logged-in");
-        navContainer.classList.remove("nav-logged-out");
-      } else {
-        navContainer.classList.add("nav-logged-out");
-        navContainer.classList.remove("nav-logged-in");
-      }
-    }
-
-    // Always render current date (doesn't depend on auth)
-    renderCurrentDate();
-
-    // Call all fetch/render functions that depend on authentication, passing the user object
-    fetchAndRenderTodayCalendarEvents(user);
-    fetchAndRenderUserTodoItems(user);
-    fetchAndRenderUserRememberItems(user);
-    fetchAndRenderMyActiveChores(user);
-    fetchAndRenderShoppingListStatus(user);
-
-    // Show/hide add forms based on login status
-    if (addTodoForm) addTodoForm.style.display = user ? "flex" : "none";
-    if (addRememberForm) addRememberForm.style.display = user ? "flex" : "none";
-  });
 
   console.log("✅ All main DOM listeners and auth watcher initialized.");
 });
