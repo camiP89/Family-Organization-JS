@@ -1,17 +1,20 @@
 // scripts/login.mjs
 
 import { auth } from "../src/firebase.js";
-import { signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  updateProfile,
+  sendPasswordResetEmail,
+} from "firebase/auth"; // Make sure sendPasswordResetEmail is imported
 
 document.addEventListener("DOMContentLoaded", () => {
   const mainLoginFormContainer = document.getElementById(
     "mainLoginFormContainer"
-  ); // New reference
-  const formContainer = document.getElementById("form-container"); // Your existing dynamic form container
+  );
+  const formContainer = document.getElementById("form-container");
   const messageElement = document.getElementById("message");
   let loginForm = document.getElementById("loginForm");
 
-  // NEW: References for the display name form
   const displayNameFormContainer = document.getElementById(
     "displayNameFormContainer"
   );
@@ -19,10 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const newDisplayNameInput = document.getElementById("newDisplayNameInput");
   const displayNameMessage = document.getElementById("displayNameMessage");
 
-  let currentUserForDisplayNameUpdate = null; // To hold the user object after login
+  let currentUserForDisplayNameUpdate = null;
 
-  // If loginForm isn't found statically, assume it needs to be created dynamically
-  // (Keeping your dynamic form creation logic)
   if (!loginForm && formContainer) {
     loginForm = document.createElement("form");
     loginForm.id = "loginForm";
@@ -46,27 +47,39 @@ document.addEventListener("DOMContentLoaded", () => {
     submitButton.type = "submit";
     submitButton.textContent = "Login";
     submitButton.classList.add("button");
-    submitButton.id = "button";
+    submitButton.id = "submitButton"; // Assign an ID to the login button for clarity
 
-    loginForm.append(emailInput, passwordInput, submitButton);
-    // Assuming formContainer is where mainLoginFormContainer would be
+    // START: ADDING THE FORGOT PASSWORD BUTTON DYNAMICALLY
+    const forgotPasswordButton = document.createElement("button");
+    forgotPasswordButton.type = "button"; // Important: make it type="button" to prevent form submission
+    forgotPasswordButton.id = "forgotPasswordButton";
+    forgotPasswordButton.textContent = "Forgot Password?";
+    forgotPasswordButton.classList.add("link-button"); // Add a class for styling
+    // END: ADDING THE FORGOT PASSWORD BUTTON DYNAMICALLY
+
+    // Append all elements to the form
+    loginForm.append(
+      emailInput,
+      passwordInput,
+      submitButton,
+      forgotPasswordButton
+    );
+
     if (mainLoginFormContainer) {
       mainLoginFormContainer.appendChild(loginForm);
     } else {
-      formContainer.appendChild(loginForm); // Fallback if mainLoginFormContainer is not used
+      formContainer.appendChild(loginForm);
     }
   } else if (!loginForm && !formContainer && !mainLoginFormContainer) {
     console.error("No login form or container found in login page.");
     return;
   }
 
-  // Ensure messageElement exists
   if (!messageElement) {
     console.error("Message element not found in login page.");
     return;
   }
 
-  // Helper function to redirect after a delay
   const redirectToHome = (delay = 1000) => {
     setTimeout(() => (window.location.href = "../index.html"), delay);
   };
@@ -92,30 +105,26 @@ document.addEventListener("DOMContentLoaded", () => {
           password
         );
         const user = userCredential.user;
-        currentUserForDisplayNameUpdate = user; // Store user for potential display name update
+        currentUserForDisplayNameUpdate = user;
 
-        // Define what a "generic" display name looks like (e.g., unset or just the email prefix)
         const genericDisplayName = email.split("@")[0];
 
         if (!user.displayName || user.displayName === genericDisplayName) {
-          // User's displayName is not set or is still the generic email prefix
           console.log("User needs to set a family name.");
-          messageElement.textContent = ""; // Clear login message
+          messageElement.textContent = "";
           if (mainLoginFormContainer)
-            mainLoginFormContainer.style.display = "none"; // Hide login form
+            mainLoginFormContainer.style.display = "none";
           if (displayNameFormContainer) {
-            displayNameFormContainer.style.display = "block"; // Show the display name form
-            newDisplayNameInput.value = ""; // Clear any default placeholder for user input
+            displayNameFormContainer.style.display = "block";
+            newDisplayNameInput.value = "";
           }
         } else {
-          // Display name is already set to something meaningful, proceed to home
-          localStorage.setItem("userName", user.displayName); // Update localStorage with the proper name
+          localStorage.setItem("userName", user.displayName);
           messageElement.textContent = `Welcome, ${user.displayName}! Redirecting...`;
           messageElement.style.color = "green";
           redirectToHome();
         }
       } catch (error) {
-        // Handle errors from Firebase Authentication
         console.error("Firebase Login Error:", error.code, error.message);
         let errorMessage = "Login failed. Please check your credentials.";
         if (error.code === "auth/invalid-email") {
@@ -132,7 +141,50 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // NEW: Event Listener for Setting Display Name Form Submission
+  // START: Event Listener for Forgot Password Button
+  // We get the reference here, assuming it's been created by the dynamic logic above.
+  const forgotPasswordButton = document.getElementById("forgotPasswordButton");
+  if (forgotPasswordButton) {
+    forgotPasswordButton.addEventListener("click", async () => {
+      const emailInput = loginForm.querySelector("#email");
+      const email = emailInput.value.trim();
+
+      if (!email) {
+        messageElement.textContent =
+          "Please enter your email to reset password.";
+        messageElement.style.color = "orange";
+        return;
+      }
+
+      messageElement.textContent = "Sending password reset email...";
+      messageElement.style.color = "blue";
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        messageElement.textContent =
+          "Password reset email sent! Check your inbox.";
+        messageElement.style.color = "green";
+      } catch (error) {
+        console.error(
+          "Firebase Password Reset Error:",
+          error.code,
+          error.message
+        );
+        let errorMessage =
+          "Failed to send password reset email. Please try again.";
+        if (error.code === "auth/user-not-found") {
+          errorMessage = "No account found with that email address.";
+        } else if (error.code === "auth/invalid-email") {
+          errorMessage = "Invalid email address format.";
+        }
+        messageElement.textContent = errorMessage;
+        messageElement.style.color = "red";
+      }
+    });
+  }
+  // END: Event Listener for Forgot Password Button
+
+  // Event Listener for Setting Display Name Form Submission
   if (setDisplayNameForm) {
     setDisplayNameForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -155,13 +207,12 @@ document.addEventListener("DOMContentLoaded", () => {
         await updateProfile(currentUserForDisplayNameUpdate, {
           displayName: newName,
         });
-        // Update the user object locally for immediate use
         currentUserForDisplayNameUpdate.displayName = newName;
 
-        localStorage.setItem("userName", newName); // Update localStorage
+        localStorage.setItem("userName", newName);
         displayNameMessage.textContent = `Name saved! Welcome, ${newName}! Redirecting...`;
         displayNameMessage.style.color = "green";
-        redirectToHome(); // Redirect to home page
+        redirectToHome();
       } catch (error) {
         console.error("Error setting display name:", error);
         displayNameMessage.textContent =
